@@ -1,0 +1,48 @@
+name: Gerar APK Music Advance
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'lib/**'
+      - '.github/workflows/build-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Criar projeto Android
+        run: flutter create --platforms=android --project-name music_advance app_build
+
+      - name: Instalar código e dependências
+        run: |
+          cp lib/main.dart app_build/lib/main.dart
+          cd app_build
+          flutter pub add just_audio file_picker
+          flutter pub get
+
+      - name: Compilar APK
+        run: |
+          cd app_build
+          flutter build apk --release
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Music-Advance-APK
+          path: app_build/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+          
